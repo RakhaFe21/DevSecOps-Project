@@ -43,3 +43,9 @@ your Linux machine.
 	Server authentication token = Token that we have create on Credentials Settings*
 
 ## Nexus Connection
+1. Go to Manage Jenkins > Managed files > add a new config > Check Global Maven settings.xml and Add ID > Provide credential for nexus server , the username and password referrer on [nexus](Nexus)
+	![enter image description here](https://github.com/RakhaFe21/DevSecOps-Project/blob/main/Jenkins/assets/Screenshot%20from%202024-02-18%2012-09-19.png?raw=true)
+2. Configure pom.xml for Nexus connection
+	- Go to source code and provide pom.xml pointing to Nexus server
+		![enter image description here](https://github.com/RakhaFe21/DevSecOps-Project/blob/main/Jenkins/assets/Screenshot%20from%202024-02-18%2012-44-10.png?raw=true)
+	
