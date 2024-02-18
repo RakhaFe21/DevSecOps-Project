@@ -6,6 +6,10 @@
 
 **The Pipeline**
 ![enter image description here](https://github.com/RakhaFe21/DevSecOps-Project/blob/main/assets/Screenshot%20from%202024-02-18%2021-17-59.png?raw=true)
+
+**Result**
+![enter image description here](https://github.com/RakhaFe21/DevSecOps-Project/blob/main/assets/Screenshot%20from%202024-02-19%2006-25-22.png?raw=true)
+
 ## Step by step
 1. Server provisioning using terraform refers to [Provisioning](Provisioning/README.md)
 2. SonarQube Installation and configuration refers to [SonarQube](SonarQube/README.md)
