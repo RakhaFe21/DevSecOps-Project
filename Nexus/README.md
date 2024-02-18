@@ -12,4 +12,5 @@
 ## Nexus Repositories
 ![enter image description here](https://github.com/RakhaFe21/DevSecOps-Project/blob/main/Nexus/assets/Screenshot%20from%202024-02-18%2017-26-44.png?raw=true)
 ## Nexus artifact upload
+1. This stage happens after building on the Jenkins
 ![enter image description here](https://github.com/RakhaFe21/DevSecOps-Project/blob/main/Nexus/assets/Screenshot%20from%202024-02-18%2017-26-29.png?raw=true)
