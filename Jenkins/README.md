@@ -20,7 +20,7 @@ your Linux machine.
 	-	OWASP Dependency-Check
 	-	Eclipse Temurin Installer
 	-	Config file provider
-## Configuration 
+## Configuration plugins
 1. Go to Manage jenkins > Tools > Add JDK
 	![enter image description here](https://github.com/RakhaFe21/DevSecOps-Project/blob/main/Jenkins/assets/Screenshot%20from%202024-02-18%2008-38-40.png?raw=true)
 2. Go to Manage jenkins > Tools > SonarQube Scanner
@@ -48,4 +48,118 @@ your Linux machine.
 2. Configure pom.xml for Nexus connection
 	- Go to source code and provide pom.xml pointing to Nexus server
 		![enter image description here](https://github.com/RakhaFe21/DevSecOps-Project/blob/main/Jenkins/assets/Screenshot%20from%202024-02-18%2012-44-10.png?raw=true)
+
+## Trivy Installation on Jenkins Documentation
+1. Install required dependencies:
+	```sh
+	sudo apt-get install wget apt-transport-https gnupg lsb-release
+	```
+2. Add Trivy GPG key:
+	```sh
+	wget -qO - https://aquasecurity.github.io/trivyrepo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+	```
+3. Add Trivy repository:
+	```sh
+	echo "deb [signed-by=/usr/share/keyrings/trivy.gpg]
 	
+	https://aquasecurity.github.io/trivy-repo/deb$(lsb_release -sc) main" |
+	
+	sudo tee -a /etc/apt/sources.list.d/trivy.list
+	```
+4. Update package list:
+	```sh
+	sudo apt-get update
+	```
+5. Install Trivy:
+	```sh
+	sudo apt-get install trivy -y
+	```
+
+## Create Pipeline
+```sh 
+pipeline {
+    agent any
+
+    tools{
+        maven 'maven3' 
+        jdk 'jdk17'
+    }
+    
+    environment{
+        SCANNER_HOME= tool 'sonar-scanner'
+    }
+
+    stages {
+        stage('git checkout') {
+            steps {
+                git branch: 'main', url:'https://github.com/RakhaFe21/Ekart-maven.git'
+            }
+        }
+        stage('Compile') {
+            steps {
+                sh "mvn compile"
+            }
+        }
+        stage('Unit test') {
+            steps {
+                sh "mvn test -DskipTests=true"
+            }
+        }
+        stage('Sonarqube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar'){
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectKey=EKART -Dsonar.projectName=EKART \
+                    -Dsonar.java.binaries=. '''
+                }
+            }
+        }    
+        stage('OWASP Dependency Check') {
+            steps {
+                dependencyCheck additionalArguments: ' --scan ./',odcInstallation: 'DC' 
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh "mvn package -DskipTests=true"
+            }
+        }
+        stage('Deploy to nexus') {
+            steps {
+                withMaven(globalMavenSettingsConfig: 'global-maven', jdk: 'jdk17',maven: 'maven3', mavenSettingsConfig: '', traceability: true) {sh "mvn deploy -DskipTests=true"}
+            }
+        }
+        stage('Docker Build & tag Image') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-user', toolName:'docker') { sh "docker build -t rakhafe/ekart:latest -fdocker/Dockerfile ."
+                }
+            }
+          }
+        }
+        stage('Trivy Scan') {
+            steps {
+                sh "trivy image rakhafe/ekart:latest > trivy-report.txt "
+            }
+        }
+        stage('Docker push image') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker-user', toolName:'docker'){ sh "docker push rakhafe/ekart:latest"}
+                }
+            }
+        }
+        stage('Kubernetes Deploy') {
+            steps {
+                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8-token', namespace: 'webapps', restrictKubeConfigAccess: false, serverUrl: 'https://172.31.9.4:6443') 
+                {
+                sh "kubectl apply -f deploymentservice.yml -n webapps" 
+                sh "kubectl get svc -n webapps"
+                }
+            }
+        }
+    }
+  }
+
+```
+
